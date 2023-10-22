@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, TextInput, View, FlatList, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -7,34 +7,48 @@ import { Button } from "../Button";
 
 export default function Main() {
   const [nameTecnologi, setNameTecnologi] = useState('');
-  const [tecnologi, setTecnologi] = useState(["lindo"] as string[]);
+  const [tecnologi, setTecnologi] = useState([] as { name: string, isChecked: boolean }[]);
+  const [checkedItems, setCheckedItems] = useState(0);
 
-  console.log(tecnologi)
   function addTecnologi() {
-    if (tecnologi.includes(nameTecnologi) || nameTecnologi === '') {
-      Alert.alert('Error', 'Participate ja existe ou não foi digitado');
+    if (tecnologi.some(item => item.name === nameTecnologi) || nameTecnologi === '') {
+      Alert.alert('Error', 'Participate já existe ou não foi digitado');
     } else {
-      setTecnologi([...tecnologi, nameTecnologi]);
+      setTecnologi([...tecnologi, { name: nameTecnologi, isChecked: false }]);
     }
     setNameTecnologi('');
   }
 
   function removeTecnologi(name: string) {
-    Alert.alert('Remove', `Deseja realmente remover ${name}`, [
+    Alert.alert('Remover', `Deseja realmente remover ${name}`, [
       {
-        text: 'sim',
+        text: 'Sim',
         onPress: () => {
-          setTecnologi(tecnologi.filter(tecnologi => tecnologi !== name))
+          setTecnologi(tecnologi.filter(tecnologi => tecnologi.name !== name));
+          const totalChecked = tecnologi.filter(item => item.isChecked).length;
+          setCheckedItems(totalChecked);
         }
-      }, {
-        text: 'não'
+      },
+      {
+        text: 'Não'
       }
-    ])
+    ]);
   }
+
+  function toggleCheckbox(name: string) {
+    const updatedTecnologi = tecnologi.map(item =>
+      item.name === name ? { ...item, isChecked: !item.isChecked } : item
+    );
+    setTecnologi(updatedTecnologi);
+    const totalChecked = updatedTecnologi.filter(item => item.isChecked).length;
+    setCheckedItems(totalChecked);
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.boxForm}>
-        <TextInput style={styles.form}
+        <TextInput
+          style={styles.form}
           placeholder="Adicione uma nova tecnologia"
           placeholderTextColor="#8C8C8C"
           keyboardType="default"
@@ -49,13 +63,20 @@ export default function Main() {
       </View>
       <View style={styles.boxMain}>
         <View style={styles.status}>
-          <Text style={styles.textCriadas} >Criadas</Text>
-          <Text style={styles.textConcluidas}>Concluidas</Text>
+          <Text style={styles.textCriadas} >Criadas {tecnologi.length}</Text>
+          <Text style={styles.textConcluidas}>Concluídas {checkedItems}</Text>
         </View>
         <FlatList
           data={tecnologi}
-          keyExtractor={name => name}
-          renderItem={({ item }) => (<Tecnologi name={item} remove={() => removeTecnologi(item)} />)}
+          keyExtractor={item => item.name}
+          renderItem={({ item }) => (
+            <Tecnologi
+              name={item.name}
+              remove={() => removeTecnologi(item.name)}
+              isChecked={item.isChecked}
+              toggleCheckbox={() => toggleCheckbox(item.name)}
+            />
+          )}
           ListEmptyComponent={() => (
             <View style={styles.clipBoard}>
               <Ionicons name="clipboard-outline" size={100} color={"#696969"} />
@@ -66,7 +87,7 @@ export default function Main() {
         />
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -92,7 +113,6 @@ const styles = StyleSheet.create({
     marginLeft: -8,
     color: "#ffff",
     paddingLeft: 15
-
   },
   boxMain: {
     flex: 1,
@@ -108,7 +128,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderBottomWidth: 1,
     borderColor: "#808080",
-    marginBottom:10
+    marginBottom: 10
   },
   textCriadas: {
     color: "#4EA8DE"
@@ -121,7 +141,7 @@ const styles = StyleSheet.create({
     height: "50%",
     alignItems: "center",
     marginTop: "15%",
-    alignSelf:"center"
+    alignSelf: "center"
   },
   textClipBoard: {
     color: "#8C8C8C",
@@ -129,6 +149,5 @@ const styles = StyleSheet.create({
   },
   FlatList: {
     flex: 1,
-
   }
-})
+});
